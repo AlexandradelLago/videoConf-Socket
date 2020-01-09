@@ -16,9 +16,12 @@ app.get('/', function(req, res){
     res.redirect('index.html');
 });
 
-io.on('connection', function(socket){
-    socket.on('stream', function(image){
+io.on('connection', (socket)=> {
+    socket.on('stream', (image)=>{
         socket.broadcast.emit('stream',image)
+    });
+    socket.on('streamPetition', (user)=>{
+        socket.broadcast.emit('streamPetition',user)
     });
 });
 
