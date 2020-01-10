@@ -23,6 +23,10 @@ io.on('connection', (socket)=> {
     socket.on('streamPetition', (user)=>{
         socket.broadcast.emit('streamPetition',user)
     });
+
+    socket.on('validate', ()=>{
+        socket.broadcast.emit('validate');
+    });
 });
 
 server.listen(port, ()=>{

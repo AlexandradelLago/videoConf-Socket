@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Renderer2 } from '@angular/core';
 import { Socket } from 'ngx-socket-io';
 
@@ -12,11 +12,9 @@ export class VisualizarComponent implements OnInit {
   // @ViewChild('logger') logger: ElementRef;
  img ;
  log;
- acceptedVideo = false;
   constructor(private renderer: Renderer2 , private socket: Socket) {
 
   }
-
 
   ngOnInit() {
     this.socket.on('streamPetition', (user) => {
@@ -45,4 +43,13 @@ public viewVideo() {
  this.initializeSocket();
 }
 
+public validateCard() {
+  const button = this.renderer.selectRootElement('button', true);
+  this.renderer.setStyle(button, 'visibility', 'hidden');
+  const videoConf = this.renderer.selectRootElement('#play', true);
+
+  videoConf.src  = '';
+
+  this.socket.emit('validate');
+}
 }
