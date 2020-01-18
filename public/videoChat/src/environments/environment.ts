@@ -7,6 +7,8 @@ export const environment = {
   chat: {
     api: 'http://localhost:3000/api',
     socket: 'http://localhost:3000',
+        // api: 'https://bfydev.brownmoties.com/chat/api',
+    // socket: 'https://bfydev.brownmoties.com/',
   },
 };
 

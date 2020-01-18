@@ -12,17 +12,20 @@ export class HomeComponent implements OnInit {
   canvas;
   context;
   interval;
+  videoUser;
+  img ;
   constructor(private renderer: Renderer2, private socket: Socket) { }
 
   ngOnInit() {
     this.video = this.renderer.selectRootElement('video');
     this.canvas = this.renderer.selectRootElement('#preview');
+    this.videoUser = this.renderer.selectRootElement('#play');
     this.initializeSocket();
   }
 
   initializeSocket() {
-    const videoAux = this.renderer.selectRootElement('video');
-    const intervalAux = this.interval;
+    // const videoAux = this.renderer.selectRootElement('video');
+    // const intervalAux = this.interval;
     const that = this;
     this.socket.on('validate', () => {
       // videoAux.load();
@@ -30,6 +33,13 @@ export class HomeComponent implements OnInit {
       clearInterval(that.interval);
       this.stop();
     });
+
+    this.socket.on('stream', (image) => {
+    //  const videoConf = that.renderer.selectRootElement('#play', true);
+      that.videoUser.src  = image;
+  });
+
+
   }
 
   stop() {
@@ -75,6 +85,7 @@ initCamera(config: any) {
   this.context.width = this.canvas.width;
   this.context.height = this.canvas.height;
 
+
   browser.getUserMedia = (browser.getUserMedia ||
     browser.webkitGetUserMedia ||
     browser.mozGetUserMedia ||
@@ -106,6 +117,12 @@ viewVideo(stream, context) {
 }
 
 }
+
+
+
+
+
+
 
 
 
