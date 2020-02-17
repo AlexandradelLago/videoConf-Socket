@@ -34,9 +34,32 @@ export class HomeComponent implements OnInit {
       this.stop();
     });
 
-    this.socket.on('stream', (image) => {
+    this.socket.on('stream', (data) => {
     //  const videoConf = that.renderer.selectRootElement('#play', true);
-      that.videoUser.src  = image;
+      that.videoUser.src  = data.image;
+
+      const audioCtx = new AudioContext();
+      const buffer = convertInt16ToFloat32(data.audio);
+
+      const src = audioCtx.createBufferSource();
+      const audioBuffer = audioCtx.createBuffer(1, buffer.byteLength, audioCtx.sampleRate);
+
+      audioBuffer.getChannelData(0).set(buffer);
+
+      src.buffer = audioBuffer;
+
+      src.connect(audioCtx.destination);
+
+      src.start(0);
+
+      function convertInt16ToFloat32(data) {
+        const result = new Float32Array(data.byteLength);
+        data.forEach(function(sample, i) {
+          // 				result[i] = sample < 0 ? sample / 0x80 : sample / 0x7F;
+          result[i] = sample / 32768;
+        });
+        return result;
+      }
   });
 
 
@@ -52,6 +75,7 @@ export class HomeComponent implements OnInit {
 
   }
   sound() {
+    this.socket.emit('streamPetition', 'davinia roca');
     this.initCamera({ video: true, audio: true });
   }
 
@@ -94,6 +118,7 @@ initCamera(config: any) {
   browser.mediaDevices.getUserMedia(config).then(stream => {
     this.video.srcObject = stream;
     this.video.play();
+    this.video.volume = 0;
   }).catch(err => console.log('camaraga no conectada, revise su camara', err));
   this.interval = setInterval(() => {
   this.viewVideo(this.video, this.context);

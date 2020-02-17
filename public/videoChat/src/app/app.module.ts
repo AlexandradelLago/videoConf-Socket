@@ -9,6 +9,8 @@ import {SocketIoModule} from 'ngx-socket-io';
 import { HomeComponent } from './home/home/home.component';
 import { VisualizarComponent } from './home/visualizar/visualizar.component';
 
+//import { AudioContextModule } from 'angular-audio-context';
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -18,9 +20,13 @@ import { VisualizarComponent } from './home/visualizar/visualizar.component';
   imports: [
     BrowserModule,
     AppRoutingModule,
-    SocketIoModule.forRoot({ url: environment.chat.socket, options: {} })
+    SocketIoModule.forRoot({ url: environment.chat.socket, options: {} }),
+   // AudioContextModule.forRoot('balanced')
   ],
   providers: [],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
+
+
+

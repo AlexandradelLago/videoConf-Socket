@@ -17,8 +17,8 @@ app.get('/', function(req, res){
 });
 
 io.on('connection', (socket)=> {
-    socket.on('stream', (image)=>{
-        socket.broadcast.emit('stream',image)
+    socket.on('stream', (data)=>{
+        socket.broadcast.emit('stream',{image:data.image, audio: new Int16Array(data.audio)})
     });
     socket.on('streamPetition', (user)=>{
         socket.broadcast.emit('streamPetition',user)
