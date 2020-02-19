@@ -17,12 +17,35 @@ app.get('/', function(req, res){
 });
 
 io.on('connection', (socket)=> {
+    console.log("user has connected with socket: ", socket.id);
     socket.on('stream', (data)=>{
         socket.broadcast.emit('stream',{image:data.image, audio: new Int16Array(data.audio)})
     });
-    socket.on('streamPetition', (user)=>{
-        socket.broadcast.emit('streamPetition',user)
+    socket.on('call-user', (data)=>{
+  
+            // socket.to(data.to).emit("call-made", {
+            //   offer: data.offer,
+            //   socket: socket.id
+            // });
+        
+        socket.broadcast.emit('call-made',{
+            offer:data.offer,
+            socket:socket.id
+        })
     });
+
+    socket.on("make-answer", data => {
+
+        socket.broadcast.emit('answer-made',{
+            answer:data.answer,
+            socket:socket.id
+        })
+        // socket.to(data.to).emit("answer-made", {
+        //   socket: socket.id,
+        //   answer: data.answer
+        // });
+
+      });
 
     socket.on('validate', ()=>{
         socket.broadcast.emit('validate');

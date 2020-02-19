@@ -2,9 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { Renderer2 } from '@angular/core';
 import { Socket } from 'ngx-socket-io';
 
-// import { AudioContext } from 'angular-audio-context';
-// import { isSupported } from 'angular-audio-context';
 
+
+declare let RTCPeerConnection: any;
 
 @Component({
   selector: 'app-visualizar',
@@ -19,112 +19,68 @@ export class VisualizarComponent implements OnInit {
   canvas;
   video;
   interval;
-  audioConverted;
+  peerConnection;
   constructor(private renderer: Renderer2, private socket: Socket) {
-
   }
 
   ngOnInit() {
-    this.socket.on('streamPetition', (user) => {
-      console.log(user);
+    this.peerConnection = new RTCPeerConnection();
+    this.peerConnection.ontrack = ({ streams: [stream] }) => {
+      const remoteVideo = this.renderer.selectRootElement('#remote-video');
+      if (remoteVideo) {
+        remoteVideo.srcObject = stream;
+      }
+     };
+    this.socket.on('call-made', async (data) => {
+      console.log(data);
+
+      await this.peerConnection.setRemoteDescription(
+        new RTCSessionDescription(data.offer)
+      );
+      const answer = await this.peerConnection.createAnswer();
+      await this.peerConnection.setLocalDescription(new RTCSessionDescription(answer));
+
+      this.socket.emit("make-answer", {
+        answer,
+        to: data.socket
+      });
+
       const button = this.renderer.selectRootElement('button', true);
       this.renderer.setStyle(button, 'visibility', 'visible');
-    });
-    console.log('on init');
 
-    this.socket.on('stream', (image) => {
-      const videoConf = this.renderer.selectRootElement('#play', true);
-      const logger = this.renderer.selectRootElement('#logger', true);
-      videoConf.src = image;
-      logger.innerHTML = image;
     });
 
-    //   this._socket.socket.on('streamReceiver', (info) => {
-    //     const videoUser = this.renderer.selectRootElement('#receivedVideoImg', true);
-    //     //videoUser.src = info.image;
-    //     let sourceStream = new AudioContext();
-    //     sourceStream.createMediaStreamSource(info.buff);
-    //     // let sourceStream = new MediaSourceStream({
-    //     //   mimeType: 'video/webm; codecs="opus,vp8"'
-    //     // });
-    //     // sourceStream.write(info.buff);
-    //     videoUser.src = window.URL.createObjectURL(info.buff);
-    //     //     $('#logger').text(image);
-    //     // })
-    //   });
-    // }
+    this.initCamera({})
+
+
   }
 
+
   initCamera(config: any) {
-    this.video = this.renderer.selectRootElement('video');
-    this.canvas = this.renderer.selectRootElement('#preview');
-    const myVideo = this.renderer.selectRootElement('img', true);
-    this.renderer.setStyle(myVideo, 'visibility', 'visible');
-
+    this.video = this.renderer.selectRootElement('#local-video');
     const browser = navigator as any;
-    this.context = this.canvas.getContext('2d');
-
-    this.canvas.width = 200;
-    this.canvas.height = 400;
-
-    this.context.width = this.canvas.width;
-    this.context.height = this.canvas.height;
-
 
     browser.getUserMedia = (browser.getUserMedia ||
       browser.webkitGetUserMedia ||
       browser.mozGetUserMedia ||
       browser.msGetUserMedia);
 
-
-
-
     browser.mediaDevices.getUserMedia(config).then(stream => {
-      this.video.srcObject = stream;
-      this.video.volume = 0;
-      this.video.play();
-
-      const audioCtx = new AudioContext();
-      const audioInput = audioCtx.createMediaStreamSource(stream);
-      const bufferSize = 2048;
-
-      const recorder = audioCtx.createScriptProcessor(bufferSize, 1, 1);
-
-      const onAudio = (e) => {
-        const mic = e.inputBuffer.getChannelData(0);
-        function convertFloat32ToInt16(buffer) {
-          let l = buffer.length;
-          const buf = new Int16Array(l);
-          while (l--) {
-            buf[l] = Math.min(1, buffer[l]) * 0x7FFF;
-          }
-          return buf.buffer;
-        }
-        this.audioConverted = convertFloat32ToInt16(mic);
+      if (this.video){
+        this.video.srcObject = stream;
+        this.video.volume = 0;
+        this.video.play();
       }
-      recorder.onaudioprocess = onAudio;
-
-      audioInput.connect(recorder);
-
-      recorder.connect(audioCtx.destination);
+      stream.getTracks().forEach(track => this.peerConnection.addTrack(track, stream));
 
     }).catch((err, message, code) => console.log('camaraga no conectada, revise su camara', err, code, message));
 
-
-    this.interval = setInterval(() => {
-      this.viewVideo();
-    }, 500);
-    console.log(this.interval);
-
   }
 
 
 
 
-  viewVideo() {
-    this.context.drawImage(this.video, 0, 0, this.context.width, this.context.height);
-    this.socket.emit('stream', {image: this.canvas.toDataURL('image/webp'), audio : this.audioConverted});
-  }
+
 
   public validateCard() {
     const button = this.renderer.selectRootElement('button', true);
@@ -137,15 +93,3 @@ export class VisualizarComponent implements OnInit {
   }
 }
 
-
-
-    //   const option = {mimeType: 'video/webm; codecs=vp9'};
-    //   const media = new MediaRecorder(stream, option);
-    //   media.ondataavailable = function (e) {
-    //     let info;
-    //       info = { image: e.data};
-    //
-    //     this._socket.socket.emit('stream', info);
-    //   };
-    //   media.start(1000);
-    // })
